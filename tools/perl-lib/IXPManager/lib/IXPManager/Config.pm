@@ -57,7 +57,7 @@ sub new {
 
 	my $self = {
 		version		=> $VERSION,
-		configfile	=> '/usr/local/etc/ixpmanager.conf',
+		configfile	=> '/etc/ixpmanager.conf',
 		class		=> $class,
 		debug		=> 0,
 	};
