@@ -1,4 +1,5 @@
 application/views/_skins/grix
+public/images/grix-*
 .project
 .buildpath
 MAINT_MODE_ENABLED
