@@ -33,7 +33,7 @@ ANSI2HTML='/usr/local/bin/ansi2html.sh --bg=dark --palette=xterm'
 MAILX='/usr/bin/bsd-mailx' # this must be classic-bsd-mailx compatible
 GEN_EMAIL_NICE='10' # how much to "nice" the process for creating html output (empty=don't nice)
 BASE64='base64'
-#QPRINT='qprint'
+QPRINT='qprint -e -i'
 HOSTNAME="`hostname --fqdn`"
 
 DEBUG=0
@@ -203,7 +203,6 @@ for vlan in $peering_lan_maps; do
 done
 if test 0 -eq $STDOUT && test 1 -eq $USE_GIT && test -n "`git status --porcelain 2>/dev/null`"; then
     #TODO: capture stderr output for $DEBUG use below... do we care?
-    #TODO: install qprint, use quoted-printable instead of base64 (more deps, less spam-score)
     now=$(date --rfc-3339=seconds 2>/dev/null) && \
         git add . >/dev/null 2>&1 && \
         git commit -m "Config-changes at $now" >/dev/null 2>&1 || \
@@ -234,13 +233,13 @@ if test 0 -eq $STDOUT && test 1 -eq $USE_GIT && test -n "`git status --porcelain
 #        {
 #            git log -p --stat --word-diff=plain -U3 'HEAD^..HEAD' 2>/dev/null || \
 #                git log -p --stat --word-diff=plain -U3 2>/dev/null
-#        } | $BASE64 >"$temp_attach_1" || \
+#        } | $QPRINT >"$temp_attach_1" || \
 #            bork "creating 3-line plaintext email output to \"$temp_attach_1\""
 #        {
 #            git log -p --stat --color-words -U9999 'HEAD^..HEAD' 2>/dev/null || \
 #                git log -p --stat --color-words -U9999 2>/dev/null
 #        } | eval "`test -z "$GEN_EMAIL_NICE" || printf 'nice -n %s ' "$GEN_EMAIL_NICE"`$ANSI2HTML" | \
-#            $BASE64 >"$temp_attach_2" || \
+#            $QPRINT >"$temp_attach_2" || \
 #            bork "creating full-context html email output to \"$temp_attach_2\""
 #        {
 #            printf 'This is a multipart message in MIME format.\n\n'
@@ -251,7 +250,7 @@ if test 0 -eq $STDOUT && test 1 -eq $USE_GIT && test -n "`git status --porcelain
 #
 #--$boundary
 #Content-Type: text/plain; charset=utf-8
-#Content-Transfer-Encoding: base64
+#Content-Transfer-Encoding: quoted-printable
 #Content-Disposition: attachment; filename="plaintext-word-diff-3line-context.diff"
 #
 #EOF
@@ -260,7 +259,7 @@ if test 0 -eq $STDOUT && test 1 -eq $USE_GIT && test -n "`git status --porcelain
 #
 #--$boundary
 #Content-Type: text/html; charset=utf-8
-#Content-Transfer-Encoding: base64
+#Content-Transfer-Encoding: quoted-printable
 #Content-Disposition: attachment; filename="html-color-word-diff-full-context.html"
 #
 #EOF
@@ -287,13 +286,13 @@ test -z \"\$temp_attach\" || rm -f \"\$temp_attach\" 2>/dev/null"
             git log -p --stat --color-words -U1 'HEAD^..HEAD' 2>/dev/null || \
                 git log -p --stat --color-words -U1 2>/dev/null
         } | eval "`test -z "$GEN_EMAIL_NICE" || printf 'nice -n %s ' "$GEN_EMAIL_NICE"`$ANSI2HTML" | \
-            $BASE64 | sed -e 's/\r\?$/\r/' >"$temp_attach" || \
+            $QPRINT | sed -e 's/\r\?$/\r/' >"$temp_attach" || \
             bork "generating 1-line-context html email output to \"$temp_attach\""
         cat "$temp_attach" | \
             $MAILX \
                 -a "From: IXP-Manager <root@${HOSTNAME}>" \
                 -a "Content-Type: text/html; charset=utf-8" \
-                -a "Content-Transfer-Encoding: base64" \
+                -a "Content-Transfer-Encoding: quoted-printable" \
                 -a "MIME-Version: 1.0" \
                 -s "Route server config changes on $HOSTNAME" $MAIL_RECIPIENTS >/dev/null 2>&1 || \
                 bork $? 'emailing config-changes'
