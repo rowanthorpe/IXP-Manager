@@ -31,6 +31,8 @@ RUNPATH="/var/run/bird"
 BIN="/usr/sbin/bird"
 ADD_TO_PATH='/usr/local/bin'
 BGP_GREP_STRING='protocol bgp b_' # this is a grep-arg, escape where needed
+BIRD_USER='bird'
+BIRD_GROUP='bird'
 DEBUG=0
 QUIET=0
 
@@ -104,6 +106,11 @@ generate_conf() {
     debug_print '%s\n' "$cmd"
     eval "$cmd" >/dev/null 2>&1
     test $? -eq 0 || { printf 'ERROR: non-zero return from moving new config "%s" to "%s"\n' "$dest" "${ETCPATH}/bird${PROTOCOL}.conf"; return 9; }
+    # set sane permissions
+    cmd="chown ${BIRD_USER}${BIRD_GROUP:+:$BIRD_GROUP} \"${ETCPATH}/bird${PROTOCOL}.conf\""
+    debug_print '%s\n' "$cmd"
+    eval "$cmd" >/dev/null 2>&1
+    test $? -eq 0 || { printf 'ERROR: non-zero return from chowning "%s" new config "%s"\n' "${BIRD_USER}${BIRD_GROUP:+:$BIRD_GROUP}" "${ETCPATH}/bird${PROTOCOL}.conf"; return 10; }
     # are we running or do we need to be started?
     cmd="\"${BIN}c${PROTOCOL}\" -s \"${RUNPATH}/bird${PROTOCOL}.ctl\" show memory"
     debug_print '%s\n' "$cmd"
