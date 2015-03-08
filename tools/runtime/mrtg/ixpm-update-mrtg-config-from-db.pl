@@ -50,14 +50,15 @@ use IXPManager::Utils;
 
 use Data::Dumper;	# debugging only
 
-my $mrtgconfigdir = "/opt/local/etc/mrtg";
+my $mrtgconfigdir = "/etc/mrtg";
 my $mrtgconfigtemplate = "$mrtgconfigdir/mrtg.cfg.template";
-my $mrtgdatadir = "/home/mrtg";
+my $mrtgdatadir = "/var/lib/mrtg";
 my $mrtgsubdir = "members";
-my $dirowner = "mrtg";
-my $ixpfullname = "INEX";
-my $ixpmaxbits = 200*1000*1000*1000;	# 200 Gbit/sec
+my $dirowner = "www-data";
+my $ixpfullname = "GRIX";
+my $ixpmaxbits = 20*1000*1000*1000;	# 20 Gbit/sec
 my $debug = 0;
+my $do_nothing = 0;
 
 GetOptions(
 	'configdir=s'		=> \$mrtgconfigdir,
@@ -102,12 +103,13 @@ my ($uid, $gid);
 my $ixpconfig = new IXPManager::Config;
 my $dbh = $ixpconfig->{db};
 
-open (OUTPUT, ">$tmpmrtgconfigfile");
+$do_nothing or open (OUTPUT, ">$tmpmrtgconfigfile");
 
 # Slurp in the configuration template
 open (INPUT, "$mrtgconfigtemplate");
 my @template = <INPUT>;
-print OUTPUT @template;
+$debug and print STDERR @template;
+$do_nothing or print OUTPUT @template;
 close (INPUT);
 
 # Get a list of all the switch IDs on each infrastructure and insert into cache
@@ -126,7 +128,7 @@ $sth = $dbh->prepare($query) || die "$dbh->errstr\n";
 $sth->execute(SWITCHTYPE_SWITCH) || die "$dbh->errstr\n";
 
 while (my $rec = $sth->fetchrow_hashref) {
-	$debug && print STDERR ("INFO: calculating infrastructure for id: $rec->{id}, infrastructure: $rec->{infrastructure}, name: $rec->{name}\n");
+	$debug and print STDERR ("INFO: calculating infrastructure for id: $rec->{id}, infrastructure: $rec->{infrastructure}, name: $rec->{name}\n");
 	push (@{$lans->{$rec->{infrastructure}}->{switchids}}, $rec->{id});
 }
 
@@ -156,7 +158,7 @@ foreach my $infra (keys %{$lans}) {
 	foreach my $switchid (@{$lans->{$infra}->{switchids}}) {
 		$sth->execute(SWITCHPORT_TYPE_PEERING, $switchid) || die "$dbh->errstr\n";
 		while (my $rec = $sth->fetchrow_hashref) {
-			$debug && print STDERR ("INFO: adding switchport: $rec->{switchname}, port: $rec->{switchport}\n");
+			$debug and print STDERR ("INFO: adding switchport: $rec->{switchname}, port: $rec->{switchport}\n");
 			$lans->{$infra}->{$rec->{switchid}}->{name} = $rec->{switchname};
 			$lans->{$infra}->{$rec->{switchid}}->{snmppasswd} = $rec->{snmppasswd};
 			$lans->{$infra}->{$rec->{switchid}}->{vendorid} = $rec->{vendorid};
@@ -173,7 +175,7 @@ foreach my $infra (keys %{$lans}) {
 		foreach my $switchid (@{$lans->{$infra}->{switchids}}) {
 			foreach my $switchport (@{$lans->{$infra}->{$switchid}->{ports}}) {
 				my $spidentifier = IXPManager::Utils::switchportifnametosnmpidentifier($switchport);
-				$debug && print STDERR ("INFO: per-infra aggregate pushed $spidentifier (\"$switchport\") to infra $infra\n");
+				$debug and print STDERR ("INFO: per-infra aggregate pushed $spidentifier (\"$switchport\") to infra $infra\n");
 				my $mrtgobj =	$traffictypes->{$traffictype}->{in}.'#'.$spidentifier.
 						'&'.
 						$traffictypes->{$traffictype}->{out}.'#'.$spidentifier.
@@ -183,7 +185,7 @@ foreach my $infra (keys %{$lans}) {
 						$lans->{$infra}->{$switchid}->{name}.
 						':::::2';
 				
-				$debug && print STDERR ("INFO: per-infra aggregate pushed $spidentifier (\"$switchport\") to infra $infra\n");
+				$debug and print STDERR ("INFO: per-infra aggregate pushed $spidentifier (\"$switchport\") to infra $infra\n");
 				push (@{$target->{'ixp_peering-network'.$infra.'-'.$traffictype}}, $mrtgobj);
 			}
 		}
@@ -191,7 +193,7 @@ foreach my $infra (keys %{$lans}) {
 		my $mrtglabel = 'ixp_peering-network'.$infra.'-'.$traffictype;
 		push (@{$alltargets->{$traffictype}}, @{$target->{$mrtglabel}});
 		my $localtarget = join (' + ', @{$target->{$mrtglabel}});
-		print OUTPUT <<EOF;
+		$do_nothing or print OUTPUT <<EOF;
 # LAN$infra $traffictypes->{$traffictype}->{name} traffic
 Target[$mrtglabel]:   $localtarget
 MaxBytes[$mrtglabel]: $traffictypes->{$traffictype}->{maxbytes}
@@ -207,7 +209,7 @@ EOF
 foreach my $traffictype (keys %{$traffictypes}) {
 		my $mrtglabel = 'ixp_peering-aggregate-'.$traffictype;
 		my $localtarget = join (' + ', @{$alltargets->{$traffictype}});
-		print OUTPUT <<EOF;
+		$do_nothing or print OUTPUT <<EOF;
 # Aggregate $traffictypes->{$traffictype}->{name} on entire exchange
 Target[$mrtglabel]:   $localtarget
 MaxBytes[$mrtglabel]: $traffictypes->{$traffictype}->{maxbytes}
@@ -261,7 +263,7 @@ foreach my $traffictype (keys %{$traffictypes}) {
 	foreach my $switch (sort keys %{$switchports}) {
 		my $mrtglabel = 'switch-aggregate-'.$switch.'-'.$traffictype;
 		my $switchtarget = join (' + ', @{$switchports->{$switch}->{$traffictype}});
-		print OUTPUT <<EOF;
+		$do_nothing or print OUTPUT <<EOF;
 # Switch traffic on $switch / $traffictype
 Target[$mrtglabel]:   $switchtarget
 MaxBytes[$mrtglabel]: $traffictypes->{$traffictype}->{maxbytes}
@@ -329,9 +331,9 @@ while (my $rec = $sth->fetchrow_hashref) {
 	push (@{$gl}, $rec);
 	$grouplist->{$shortname} = $gl;
 
-	$debug && print STDERR ("INFO: added per-customer entries: $membername, $switch:$switchport, $speed Mbps\n");
+	$debug and print STDERR ("INFO: added per-customer entries: $membername, $switch:$switchport, $speed Mbps\n");
 	# print out mrtg single configuration entry
-	print OUTPUT <<EOF;
+	$do_nothing or print OUTPUT <<EOF;
 # $membername - $tag - bits in/out
 Target[$shortname-$index-bits]: $mrtgport
 MaxBytes[$shortname-$index-bits]: $speedbytes
@@ -396,7 +398,7 @@ foreach my $shortname (sort keys (%{$grouplist})) {
 	my $errsioport = join (' + ', @errsioports);
 	my $discsport = join (' + ', @discsports);
 
-	print OUTPUT <<EOF;
+	$do_nothing or print OUTPUT <<EOF;
 # $name - $shortname - bits in/out
 Target[$shortname-aggregate-bits]: $bitsioport
 MaxBytes[$shortname-aggregate-bits]: $speedbytes
@@ -429,12 +431,13 @@ Title[$shortname-aggregate-discs]: $name -- aggregate -- Discards in/out
 
 
 EOF
-	-d "$mrtgdatadir/$mrtgsubdir/$shortname" 
+	$do_nothing
+		or -d "$mrtgdatadir/$mrtgsubdir/$shortname" 
 		or mkdir ("$mrtgdatadir/$mrtgsubdir/$shortname", 0755)
 		or die "ERROR: mkdir(\"$mrtgdatadir/$mrtgsubdir/$shortname\") failed\n";
 		
-	chown $uid, $gid, "$mrtgdatadir/$mrtgsubdir/$shortname";
+	$do_nothing or chown $uid, $gid, "$mrtgdatadir/$mrtgsubdir/$shortname";
 }
 
-close (OUTPUT);
-move ($tmpmrtgconfigfile, $mrtgconfigfile) or die "ERROR: move(\"$tmpmrtgconfigfile\", \"$mrtgconfigfile\") failed\n";
+$do_nothing or close (OUTPUT);
+$do_nothing or move ($tmpmrtgconfigfile, $mrtgconfigfile) or die "ERROR: move(\"$tmpmrtgconfigfile\", \"$mrtgconfigfile\") failed\n";
