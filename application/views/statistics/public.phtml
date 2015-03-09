@@ -5,21 +5,25 @@
         <li>
             <a href="{genUrl}">Home</a> <span class="divider">/</span>
         </li>
+        <li>
+            <a href="{genUrl controller="statistics" action="public"}">Public Traffic Statistics</a> <span class="divider">/</span>
+        </li>
         <li class="active">
-            {$options.identity.orgname} Public Traffic Statistics
+            {$graphs.$graph.title} :: {foreach from=$categories key=cname item=cvalue}{if $category eq $cvalue}{$cname}{/if}{/foreach}
         </li>
     </ul>
+    <div class="page-content">
 {else}
     <div class="page-content">
         <div class="page-header">
-            <h1>{$options.identity.orgname} Public Traffic Statistics</h1>
+            <h1>Public Traffic Statistics</h1>
         </div>
 {/if}
 
-<h3>{$graphs.$graph.title} :: {foreach from=$categories key=cname item=cvalue}{if $category eq $cvalue}{$cname}{/if}{/foreach}</h3>
 
 {OSS_Message}
 
+<h3>{$graphs.$graph.title} :: {foreach from=$categories key=cname item=cvalue}{if $category eq $cvalue}{$cname}{/if}{/foreach}</h3>
 <p>
 <form action="{genUrl controller="statistics" action="public"}" method="post" class="form-horizontal">
 <table>
@@ -84,6 +88,7 @@
 
 </div>
 
+</div>
 
 {tmplinclude file="footer.phtml"}
 

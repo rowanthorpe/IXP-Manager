@@ -7,21 +7,23 @@
             <a href="{genUrl}">Home</a> <span class="divider">/</span>
         </li>
         <li>
-            Switch Aggregate Graphs <span class="divider">/</span>
+            <a href="{genUrl controller="statistics" action="switches"}">Switch Aggregate Statistics</a> <span class="divider">/</span>
         </li>
         <li class="active">
             {$switches.$switch.name} ({foreach from=$categories key=cname item=cvalue}{if $category eq $cvalue}{$cname}{/if}{/foreach})
         </li>
     </ul>
+    <div class="page-content">
 {else}
     <div class="page-content">
         <div class="page-header">
-            <h1>Switch Aggregate Graphs - {$switches.$switch.name} ({foreach from=$categories key=cname item=cvalue}{if $category eq $cvalue}{$cname}{/if}{/foreach})</h1>
+            <h1>Switch Aggregate Statistics</h1>
         </div>
 {/if}
 
 
 {OSS_Message}
+<h3>{$switches.$switch.name} ({foreach from=$categories key=cname item=cvalue}{if $category eq $cvalue}{$cname}{/if}{/foreach})</h3>
 
 <div class="row-fluid">
     <div class="span12">
@@ -83,4 +85,5 @@
 
 </div>
 
+</div>
 {tmplinclude file="footer.phtml"}

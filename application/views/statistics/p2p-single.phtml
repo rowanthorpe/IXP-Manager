@@ -25,6 +25,7 @@
             )
         </li>
     </ul>
+    <div class="page-content">
 {else}
     <div class="page-content">
         <div class="page-header">
@@ -137,8 +138,6 @@
 
 {/if} {* customer has an interface for given infra and proto *}
 
-{if $user->getPrivs() neq USER::AUTH_SUPERUSER}
 </div>
-{/if}
 
 {tmplinclude file="footer.phtml"}

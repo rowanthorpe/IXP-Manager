@@ -6,21 +6,23 @@
             <a href="{genUrl}">Home</a> <span class="divider">/</span>
         </li>
         <li>
-            Trunk Graphs <span class="divider">/</span>
+            <a href="{genUrl controller="statistics" action="trunks"}">Trunk Graphs</a> <span class="divider">/</span>
         </li>
         <li class="active">
             {$graphs.$graph}
         </li>
     </ul>
+    <div class="page-content">
 {else}
     <div class="page-content">
         <div class="page-header">
-            Trunk Graphs :: {$graphs.$graph}
+            <h1>Trunk Graphs :: {$graphs.$graph}</h1>
         </div>
 {/if}
 
 {OSS_Message}
 
+<h3>{$graphs.$graph}</h3>
 <div class="row-fluid">
     <div class="span12">
         <form action="{genUrl controller="statistics" action="trunks"}" method="post" class="form-horizontal">
@@ -72,5 +74,6 @@
 
 </div>
 
+</div>
 {tmplinclude file="footer.phtml"}
 

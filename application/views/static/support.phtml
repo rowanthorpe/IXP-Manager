@@ -12,6 +12,7 @@
             Technical Support and Contact Information
         </li>
     </ul>
+    <div class="page-content">
 {else}
     <div class="page-content">
         <div class="page-header">
@@ -76,8 +77,6 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer tristique diam 
     </table>
 </div>
 
-{if not isset( $user ) or $user->getPrivs() neq 3}
-    </div>
-{/if}
+</div>
 
 {tmplinclude file="footer.phtml"}
