@@ -4,21 +4,21 @@
 #
 # Copyright (C) 2009-2012 Internet Neutral Exchange Association Limited.
 # All Rights Reserved.
-# 
+#
 # This file is part of IXP Manager.
-# 
+#
 # IXP Manager is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
 # Software Foundation, version v2.0 of the License.
-# 
+#
 # IXP Manager is distributed in the hope that it will be useful, but WITHOUT
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
 # more details.
-# 
+#
 # You should have received a copy of the GNU General Public License v2.0
 # along with IXP Manager.  If not, see:
-# 
+#
 # http://www.gnu.org/licenses/gpl-2.0.html
 #
 # Description:
@@ -90,7 +90,7 @@ my $traffictypes = {
 		options => 'growright',
 		name	=> 'Packets',
 	},
-};	
+};
 
 my ($grouplist, %opts);
 my ($errstr, $sth, $query);
@@ -184,7 +184,7 @@ foreach my $infra (keys %{$lans}) {
 						'@'.
 						$lans->{$infra}->{$switchid}->{name}.
 						':::::2';
-				
+
 				$debug and print STDERR ("INFO: per-infra aggregate pushed $spidentifier (\"$switchport\") to infra $infra\n");
 				push (@{$target->{'ixp_peering-network'.$infra.'-'.$traffictype}}, $mrtgobj);
 			}
@@ -216,7 +216,7 @@ MaxBytes[$mrtglabel]: $traffictypes->{$traffictype}->{maxbytes}
 Title[$mrtglabel]:    $ixpfullname Aggregate Traffic - $traffictype
 Options[$mrtglabel]:  $traffictypes->{$traffictype}->{options}
 YLegend[$mrtglabel]:  $traffictypes->{$traffictype}->{name} / Second
-		
+
 EOF
 }
 
@@ -295,7 +295,7 @@ $query = 'SELECT
 		cu.id = vi.custid
 	AND	pi.virtualinterfaceid = vi.id
 	AND	cu.status = ?
-	AND	cu.type != ? 
+	AND	cu.type != ?
 	ORDER BY
 		shortname
 ';
@@ -432,10 +432,10 @@ Title[$shortname-aggregate-discs]: $name -- aggregate -- Discards in/out
 
 EOF
 	$do_nothing
-		or -d "$mrtgdatadir/$mrtgsubdir/$shortname" 
+		or -d "$mrtgdatadir/$mrtgsubdir/$shortname"
 		or mkdir ("$mrtgdatadir/$mrtgsubdir/$shortname", 0755)
 		or die "ERROR: mkdir(\"$mrtgdatadir/$mrtgsubdir/$shortname\") failed\n";
-		
+
 	$do_nothing or chown $uid, $gid, "$mrtgdatadir/$mrtgsubdir/$shortname";
 }
 
