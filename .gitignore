@@ -1,4 +1,5 @@
 application/views/_skins/grix
+application/views/_skins/grix.greek
 public/images/grix-*
 .project
 .buildpath
@@ -33,6 +34,6 @@ tools/perl-lib/IXPManager/pm_to_blib
 application/views/router-cli/tacacs/tacplus/key.cfg
 application/views/_skins/*/router-cli/tacacs/*/key.cfg
 application/configs/rc-inex-*conf
-application/configs/rs*-inex-*.conf
+application/configs/rs*-*.conf
 application/configs/ci-*
 *.DS_Store
