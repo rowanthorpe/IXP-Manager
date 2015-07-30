@@ -318,9 +318,8 @@ class StatisticsCliController extends IXP_Controller_CliAction
                     }
 
                     $this->getD2EM()->persist( $td );
+                    $this->getD2EM()->flush();
                 }
-
-                $this->getD2EM()->flush();
             }
         }
 
